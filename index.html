@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Water Jug Problem</title>
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #0f172a, #1e293b);
+        color: white;
+        text-align: center;
+        margin: 0;
+    }
+    h1 {
+    margin-top: 20px;
+    letter-spacing: 1px;
+}
+
+.controls {
+    margin: 20px;
+}
+
+input {
+    padding: 8px;
+    border-radius: 8px;
+    border: none;
+    margin: 5px;
+    width: 70px;
+    text-align: center;
+}
+
+button {
+    padding: 10px 18px;
+    margin: 10px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: white;
+    font-size: 15px;
+    transition: 0.3s ease;
+}
+
+button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 10px rgba(34,197,94,0.6);
+}
+
+.container {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 60px;
+}
+
+.jug-wrapper {
+    text-align: center;
+}
+
+.jug {
+    width: 130px;
+    height: 220px;
+    border: 3px solid white;
+    border-radius: 20px; /* added border radius */
+    position: relative;
+    overflow: hidden;
+    background: rgba(255,255,255,0.05);
+    box-shadow: 0 0 15px rgba(255,255,255,0.2);
+}
+
+.water {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background: linear-gradient(#38bdf8, #0ea5e9);
+    border-radius: 0 0 18px 18px;
+    transition: height 0.6s ease-in-out; /* smooth animation */
+}
+
+.label {
+    margin-top: 10px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+#log {
+    height: 160px;
+    overflow-y: auto;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.3);
+    margin: 20px;
+    padding: 10px;
+    text-align: left;
+    background: rgba(0,0,0,0.3);
+}
+
+.fade-in {
+    animation: fadeIn 1s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+</style>
+</head>
+<body><h1>Water Jug Problem</h1>
+    <h2>BFS (Breadth First Search ) Application</h2>
+    <h2>Artificial Intelligence Project</h2>
+    <div class="controls">
+    Jug A: <input type="number" id="capA" value="4">
+    Jug B: <input type="number" id="capB" value="3">
+    Target: <input type="number" id="target" value="2">
+</div><button onclick="startBFS()">Start BFS</button> <button onclick="reset()">Reset</button>
+
+<div class="container">
+    <div class="jug-wrapper">
+        <div class="jug" id="jugA">
+            <div class="water" id="waterA"></div>
+        </div>
+        <div class="label">Jug A</div>
+    </div><div class="jug-wrapper">
+    <div class="jug" id="jugB">
+        <div class="water" id="waterB"></div>
+    </div>
+    <div class="label">Jug B</div>
+</div>
+
+</div><h3>Steps Log</h3>
+<div id="log"></div><script>
+let steps = [];
+let index = 0;
+
+function log(msg) {
+    const logDiv = document.getElementById("log");
+    const entry = document.createElement("div");
+    entry.className = "fade-in";
+    entry.innerHTML = msg;
+    logDiv.appendChild(entry);
+    logDiv.scrollTop = logDiv.scrollHeight;
+}
+
+function updateUI(a, b, capA, capB) {
+    document.getElementById("waterA").style.height = (a / capA) * 100 + "%";
+    document.getElementById("waterB").style.height = (b / capB) * 100 + "%";
+}
+
+function getNextStates(a, b, capA, capB) {
+    return [
+        [capA, b],
+        [a, capB],
+        [0, b],
+        [a, 0],
+        [Math.max(0, a - (capB - b)), Math.min(capB, b + a)],
+        [Math.min(capA, a + b), Math.max(0, b - (capA - a))]
+    ];
+}
+
+function startBFS() {
+    steps = [];
+    index = 0;
+    document.getElementById("log").innerHTML = "";
+
+    let capA = parseInt(document.getElementById("capA").value);
+    let capB = parseInt(document.getElementById("capB").value);    
+    let target = parseInt(document.getElementById("target").value);
+
+    let visited = new Set();
+    let queue = [[[0, 0], []]];
+
+    while (queue.length > 0) {
+        let [[a, b], path] = queue.shift();
+
+        if (visited.has(a + "," + b)) continue;
+        visited.add(a + "," + b);
+
+        let newPath = path.concat([[a, b]]);
+
+        if (a === target || b === target) {
+            steps = newPath;
+            animate(capA, capB);
+            return;
+        }
+
+        for (let [na, nb] of getNextStates(a, b, capA, capB)) {
+            queue.push([[na, nb], newPath]);
+        }
+    }
+
+    log("No solution found");
+}
+
+function animate(capA, capB) {
+    let interval = setInterval(() => {
+        if (index >= steps.length) {
+            clearInterval(interval);
+            return;
+        }
+        let [a, b] = steps[index];
+        updateUI(a, b, capA, capB);
+        log(`Step ${index}: (${a}, ${b})`);
+        index++;
+    }, 1600);
+}
+
+function reset() {
+    document.getElementById("log").innerHTML = "";
+    updateUI(0, 0, 1, 1);
+}
+</script></body>
+</html>
